@@ -9,11 +9,9 @@ app.use(express.json());
 let items = [];
 
 // Create an item (POST /items)
-app.post('/items', (req, res) =>
-{
+app.post('/items', (req, res) => {
   const { id, name } = req.body;
-  if (!id || !name) 
-  {
+  if (!id || !name) {
     return res.status(400).json({ message: 'ID and name are required.' });
   }
   items.push({ id, name });
@@ -21,46 +19,38 @@ app.post('/items', (req, res) =>
 });
 
 // Read all items (GET /items)
-app.get('/items', (req, res) => 
-{
+app.get('/items', (req, res) => {
   res.json(items);
 });
 
 // Read a single item by ID (GET /items/:id)
-app.get('/items/:id', (req, res) => 
-{
-  const item = items.find(i => i.id === req.params.id);
-  if (!item) 
-  {
+app.get('/items/:id', (req, res) => {
+  const item = items.find(i => i.id === req.params.id);  // Compare as string (ensure consistency)
+  if (!item) {
     return res.status(404).json({ message: 'Item not found.' });
   }
   res.json(item);
 });
 
 // Update an item (PUT /items/:id)
-app.put('/items/:id', (req, res) => 
-{
+app.put('/items/:id', (req, res) => {
   const { name } = req.body;
-  const item = items.find(i => i.id === req.params.id);
-  if (!item) 
-{
+  const item = items.find(i => i.id === req.params.id);  // Compare as string (ensure consistency)
+  if (!item) {
     return res.status(404).json({ message: 'Item not found.' });
-}
+  }
   item.name = name;
   res.json({ message: 'Item updated', item });
-
 });
 
 // Delete an item (DELETE /items/:id)
-app.delete('/items/:id', (req, res) => 
-{
-  items = items.filter(i => i.id !== req.params.id);
+app.delete('/items/:id', (req, res) => {
+  items = items.filter(i => i.id !== req.params.id);  // Compare as string (ensure consistency)
   res.json({ message: 'Item deleted' });
 });
 
 // Start the server
-app.listen(port, () => 
-{
+app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
 

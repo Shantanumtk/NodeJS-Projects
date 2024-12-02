@@ -1,72 +1,84 @@
-const request = require('supertest');
-const app = require('../server');
-const { expect } = require('chai');
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const server = require('../server');  // Adjust the path to your server.js file
+const expect = chai.expect;
 
-describe('CRUD API Tests', () => 
-{
-  it('should create an item', (done) => 
- {
-    request(app)
+chai.use(chaiHttp);
+
+describe('CRUD API Tests', () => {
+  // Variable to store the created item ID for later tests
+  let itemId;
+
+  // POST /items - Create a new item
+  it('should create a new item', (done) => {
+    chai.request(server)
       .post('/items')
       .send({ id: '1', name: 'Test Item' })
-      .expect(201)
-      .end((err, res) => 
-      {
-        if (err) return done(err);
-        expect(res.body.message).to.equal('Item created');
+      .end((err, res) => {
+        expect(res.status).to.equal(201);
+        expect(res.body).to.have.property('message').that.equals('Item created');
+        expect(res.body.item).to.have.property('id').that.equals('1');
+        expect(res.body.item).to.have.property('name').that.equals('Test Item');
+        itemId = res.body.item.id; // Store the ID for later use in GET, PUT, DELETE tests
         done();
       });
   });
 
-  it('should retrieve all items', (done) => 
-  {
-    request(app)
+  // GET /items - Get all items
+  it('should return all items', (done) => {
+    chai.request(server)
       .get('/items')
-      .expect(200)
-      .end((err, res) => 
-      {
-        if (err) return done(err);
-        expect(res.body).to.be.an('array').with.lengthOf(1);
+      .end((err, res) => {
+        expect(res.status).to.equal(200);
+        expect(res.body).to.be.an('array').that.is.not.empty;
         done();
       });
   });
 
-  it('should retrieve a single item by ID', (done) => 
-  {
-    request(app)
-      .get('/items/1')
-      .expect(200)
-      .end((err, res) => 
-      {
-        if (err) return done(err);
-        expect(res.body).to.have.property('name', 'Test Item');
+  // GET /items/:id - Get a specific item by ID
+  it('should return the created item by ID', (done) => {
+    chai.request(server)
+      .get(`/items/${itemId}`)
+      .end((err, res) => {
+        expect(res.status).to.equal(200);
+        expect(res.body).to.have.property('id').that.equals(itemId);
+        expect(res.body).to.have.property('name').that.equals('Test Item');
         done();
       });
   });
 
-  it('should update an item', (done) => 
-  {
-    request(app)
-      .put('/items/1')
-      .send({ name: 'Updated Item' })
-      .expect(200)
-      .end((err, res) => 
-      {
-        if (err) return done(err);
-        expect(res.body.item.name).to.equal('Updated Item');
+  // PUT /items/:id - Update an item
+  it('should update the created item', (done) => {
+    chai.request(server)
+      .put(`/items/${itemId}`)
+      .send({ name: 'Updated Test Item' })
+      .end((err, res) => {
+        expect(res.status).to.equal(200);
+        expect(res.body).to.have.property('message').that.equals('Item updated');
+        expect(res.body.item).to.have.property('id').that.equals(itemId);
+        expect(res.body.item).to.have.property('name').that.equals('Updated Test Item');
         done();
       });
   });
 
-  it('should delete an item', (done) => 
-  {
-    request(app)
-      .delete('/items/1')
-      .expect(200)
-      .end((err, res) => 
-      {
-        if (err) return done(err);
-        expect(res.body.message).to.equal('Item deleted');
+  // DELETE /items/:id - Delete an item
+  it('should delete the created item', (done) => {
+    chai.request(server)
+      .delete(`/items/${itemId}`)
+      .end((err, res) => {
+        expect(res.status).to.equal(200);
+        expect(res.body).to.have.property('message').that.equals('Item deleted');
+        done();
+      });
+  });
+
+  // GET /items/:id after deletion - Check for 404
+  it('should return 404 when trying to GET a deleted item', (done) => {
+    chai.request(server)
+      .get(`/items/${itemId}`)
+      .end((err, res) => {
+        expect(res.status).to.equal(404);
+        expect(res.body).to.have.property('message').that.equals('Item not found.');
         done();
       });
   });
