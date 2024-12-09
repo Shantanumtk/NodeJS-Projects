@@ -49,6 +49,11 @@ app.delete('/items/:id', (req, res) => {
   res.json({ message: 'Item deleted' });
 });
 
+// Health check endpoint (GET /health)
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() });
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
